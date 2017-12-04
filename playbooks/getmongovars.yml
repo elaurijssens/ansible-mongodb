@@ -1,0 +1,62 @@
+---
+  - name: Import vars from vars files and write to MongoDB
+    hosts: localhost
+    connection: local
+    gather_facts: false
+
+    vars:
+      project_toplevel: "{{lookup('pipe', 'git rev-parse --show-toplevel')}}"
+      env: "oldstuff"
+
+    tasks:
+      - name: Include secrets
+        include_vars: "{{ project_toplevel }}/vars/secrets.vault.yml"
+
+      - name: Make sure that we have all we need
+        assert:
+          that:
+            - secrets.kv_connect is defined
+            - secrets.aes_key is defined
+            - env is defined
+
+      - name: Set mongodb parameters, look for match on env
+        set_fact:
+          mongodb_parameters:
+            connection_string: "{{ secrets.kv_connect }}"
+            database: "voyager"
+            collection: "demo"
+            filter: { "env" : "{{ env }}" }
+
+      - name: Get data from MongoDB
+        set_fact:
+          mongodata: "{{ lookup('mongodb', mongodb_parameters) }}"
+
+      - name: Show what is in mongodata
+        debug:
+          var: mongodata
+
+      - name: Decrypt data field in dictionary
+        set_fact:
+          decrypted_data: "{{ mongodata.data|aesdecrypt(secrets.aes_key)|from_json }}"
+
+      - name: Show what's in decrypted_data
+        debug:
+          var: decrypted_data
+
+      - name: Set real vars from decrypted data
+        set_fact:
+          flavor: "{{ decrypted_data.flavor }}"
+          secrets: "{{ decrypted_data.secrets }}"
+          common: "{{ decrypted_data.common }}"
+
+      - name: Show flavor
+        debug:
+          var: flavor
+
+      - name: Show secrets
+        debug:
+          var: secrets
+
+      - name: Show common
+        debug:
+          var: common

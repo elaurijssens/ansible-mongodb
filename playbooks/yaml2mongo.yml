@@ -1,0 +1,45 @@
+---
+  - name: Get vars from MongoDB
+    hosts: localhost
+    connection: local
+    gather_facts: false
+
+    # Of course, the project_toplevel thing is not going to work if we run the playbook from this repo,
+    # and the vars are in another repo.
+
+    vars:
+      project_toplevel: "{{lookup('pipe', 'git rev-parse --show-toplevel')}}"
+      env: "oldstuff"
+
+    tasks:
+      - name: Include secrets
+        include_vars: "{{ project_toplevel }}/vars/secrets.vault.yml"
+
+      - name: Make sure that we have all we need
+        assert:
+          that:
+            - secrets.kv_connect is defined
+            - secrets.aes_key is defined
+            - env is defined
+
+      - name: Read vars from file
+        include_vars:
+          file: "{{ project_toplevel + '/vars/' + env + '/' + item }}"
+          name: datablob
+        with_items:
+          - vars.yml
+          - oldsecrets.vault
+
+      - name: Write to MongoDB data var
+        set_fact:
+          data: "{{ datablob|to_json|aesencrypt(secrets.aes_key) }}"
+
+      - name: Write mongodb record
+        mongodb_document:
+          connection_string: "{{ secrets.kv_connect }}"
+          database: "voyager"
+          collection: "demo"
+          state: present
+          document:
+            env: "{{ env }}"
+            data: "{{ data }}"

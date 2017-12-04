@@ -1,0 +1,7 @@
+ansible-playbook -i inventories/local/hosts --vault-id demo@prompt playbooks/create_mongo_doc.yml
+
+ansible-playbook -i inventories/local/hosts --vault-id demo@prompt playbooks/delete_mongo_doc.yml
+
+ansible-playbook -i inventories/local/hosts --vault-id demo@prompt --vault-id oldstuff@prompt playbooks/yaml2mongo.yml
+
+ansible-playbook -i inventories/local/hosts --vault-id demo@prompt playbooks/getmongovars.yml

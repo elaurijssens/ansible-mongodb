@@ -1,0 +1,40 @@
+---
+flavor: vanilla
+
+common:
+  var1: "hdbfryhvesbh"
+  var2: "host.subdomain.domain.tld"
+
+  structure:
+    this_can_be_deep:
+      oh_yes_we_can_be_binary: true
+      and_more:
+        numeric_values_as_well: 33554432
+
+  imaging:
+    hardware:
+      disk:
+        size: 32GB
+        dev: /dev/sdb
+        lvm:
+          vg: datavg
+          lv: volume1
+      cpu:
+        vcpu: 2
+        cores: 4
+      memory: 12GB
+    software:
+      os: centos7-x86_64
+      packages:
+        - python-pip
+        - htop
+        - man
+        - curl
+        - wget
+      pip:
+        - ansible>=2.4.2.0
+        - azure==2.0.0
+        - pyvmomi
+        - pywinrm
+        - pymongo
+

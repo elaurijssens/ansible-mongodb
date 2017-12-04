@@ -1,0 +1,63 @@
+---
+  - name: Create document
+    hosts: localhost
+    connection: local
+    gather_facts: false
+
+    vars:
+      project_toplevel: "{{lookup('pipe', 'git rev-parse --show-toplevel')}}"
+
+    tasks:
+      - name: Include secrets
+        include_vars: "{{ project_toplevel }}/vars/secrets.vault.yml"
+
+      - name: Make sure that we have all we need
+        assert:
+          that:
+            - secrets.kv_connect is defined
+            - secrets.aes_key is defined
+
+      - name: Create a document in Azure Cosmos DB
+        mongodb_document:
+          connection_string: "{{ secrets.kv_connect }}"
+          database: "voyager"
+          collection: "demo"
+          state: present
+          document:
+            my_id: "demodoc"
+            property1: "value 1"
+            property2: "value 2"
+            list1:
+              - listitem1
+              - listitem2
+              - listitem3
+            project:
+              name: "Voyager"
+              address:
+                name: ""
+                street: "Plotterweg"
+                number: "38"
+                city: "Amersfoort"
+                postal_code: "3821BB"
+
+      - name: Set search parameters
+        set_fact:
+          mongodb_parameters:
+            connection_string: "{{ secrets.kv_connect }}"
+            database: "voyager"
+            collection: "demo"
+            filter: { "my_id" : "demodoc" }
+
+      - name: Retrieve document from Azure cosmos DB
+        set_fact:
+          mongodoc: "{{ lookup('mongodb', mongodb_parameters ) }}"
+
+      - name: Show document
+        debug:
+          var: mongodoc
+
+
+
+
+
+
