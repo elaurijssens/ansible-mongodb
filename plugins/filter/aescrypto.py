@@ -35,7 +35,7 @@ class FilterModule(object):
         # We need to make sure the key length is correct. Any guesswork or patchwork here weakens security, so
         # raise an error if it's not.
 
-        if (len(key) != 16) and l(en(key) != 24) and (len(key) != 32):
+        if (len(key) != 16) and (len(key) != 24) and (len(key) != 32):
             raise AnsibleFilterError("Key length should be 16, 24 or 32 characters")
 
         # AES uses a block size of 16 bytes. So, the input must be a multiple of 16. The input data could be anything
@@ -62,7 +62,7 @@ class FilterModule(object):
 
     def aesdecrypt(self, blob, key):
 
-        if (len(key) != 16) and l(en(key) != 24) and (len(key) != 32):
+        if (len(key) != 16) and (len(key) != 24) and (len(key) != 32):
             raise AnsibleFilterError("Key length should be 16, 24 or 32 characters")
 
         def unpad(s):
