@@ -120,14 +120,14 @@ def main():
         mongo_module = AnsibleModule(argument_spec=module_arg_spec,
                                      supports_check_mode=True)
 
-        # pymongo adds _id to the document if it has to create it. _id is a MongoDB cursor, an object type that is
+        # MongoDB adds _id to the document if it has to create it. _id is a MongoDB cursor, an object type that is
         # only defined in the pymongo library. So what? Well, if we don't copy the dict first, it will add an object
         # type that AnsibleModule doesn't understand. Ansible, when run with -vvv, will show the invocation parameters
         # and filter out parameters that we don't want to log. That is all done by the exit_json method, and it will
         # fail miserably on unknown object types. It does that always, not only when you use -vvv.
         doc_to_work_on = deepcopy(mongo_module.params["document"])
 
-        # Now we're at it, let's use variabled for the rest as well. They're strings, and immutable, but still.
+        # Now we're at it, let's use variables for the rest as well. They're strings, and immutable, but still.
         connstring = mongo_module.params["connection_string"]
         database_name = mongo_module.params["database"]
         collection_name = mongo_module.params["collection"]

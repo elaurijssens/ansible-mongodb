@@ -1,9 +1,20 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2017 Emma Laurijssens van Engelenhoven, <emma@talwyn-esp.nl>
+#
+#  GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 import base64
 import random
 from Crypto.Cipher import AES
-
+from ansible.errors import AnsibleFilterError
 
 class FilterModule(object):
 
@@ -16,16 +27,16 @@ class FilterModule(object):
             'aesdecrypt': self.aesdecrypt
         }
 
-    # The filter aescrypto takes three arguments. The first argument is the data that is 'piped' into the filter.
+    # The filter aesencrypt and aesdecrypt take two arguments. The first argument is the data that is 'piped' into the filter.
     # The second argument is the AES key (we'll use AES-256 so a 32 byte key is necessary).
-    # The third argument determines the direction: True for encrypting or False for decrypting.
 
     def aesencrypt(self, blob, key):
 
-        # As error handling in filters is not particularly well implemented, we'll just pad the key to 32 characters.
-        # Of course, providing shorter keys weakens security and is strongly discouraged.
+        # We need to make sure the key length is correct. Any guesswork or patchwork here weakens security, so
+        # raise an error if it's not.
 
-        key = "{}VoyagerVoyagerVoyagerVoyagerVoyager".format(key)[:32]
+        if (len(key) != 16) and l(en(key) != 24) and (len(key) != 32):
+            raise AnsibleFilterError("Key length should be 16, 24 or 32 characters")
 
         # AES uses a block size of 16 bytes. So, the input must be a multiple of 16. The input data could be anything
         # though. So, we will be padding the missing bytes with a byte that indicates the number of characters
@@ -39,7 +50,7 @@ class FilterModule(object):
             return s + (block_size - len(s) % block_size) * chr(block_size - len(s) % block_size)
 
         # AES in CBC mode needs a random 16 byte initialization vector, so that encrypted data can not be related,
-        # even when the source data was the same. In that regard, it serves the same purpose a a password salt.
+        # even when the source data was the same. In that regard, it serves the same purpose as a password salt.
         # The final encrypted data is prepended with the iv, so that the data can be successfully decrypted, and then
         # Base64 encoded to allow for embedding in text structures.
 
@@ -51,10 +62,8 @@ class FilterModule(object):
 
     def aesdecrypt(self, blob, key):
 
-        # As error handling in filters is not particularly well implemented, we'll just pad the key to 32 characters.
-        # Of course, providing shorter keys weakens security and is strongly discouraged.
-
-        key = "{}VoyagerVoyagerVoyagerVoyagerVoyager".format(key)[:32]
+        if (len(key) != 16) and l(en(key) != 24) and (len(key) != 32):
+            raise AnsibleFilterError("Key length should be 16, 24 or 32 characters")
 
         def unpad(s):
             return s[0:-ord(s[-1])]
